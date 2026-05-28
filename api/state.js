@@ -2,15 +2,26 @@ import { Redis } from "@upstash/redis";
 
 const KEY = "hidrostal_costos_tablero_v1";
 
+function getRedis() {
+  const url =
+    process.env.KV_REST_API_URL ||
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.REDIS_REST_API_URL;
+  const token =
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.REDIS_REST_API_TOKEN;
+  if (!url || !token) return null;
+  return new Redis({ url, token });
+}
+
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
-  let redis;
-  try {
-    redis = Redis.fromEnv();
-  } catch (err) {
+  const redis = getRedis();
+  if (!redis) {
     return res.status(500).json({
-      error: "Redis no configurado. Faltan variables KV_REST_API_URL / KV_REST_API_TOKEN."
+      error: "Redis no configurado. Faltan las variables REST URL/TOKEN de Upstash."
     });
   }
 
